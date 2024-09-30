@@ -23,7 +23,7 @@ interface SongRequest {
   songTitle: string;
   artist: string;
   message: string;
-  timestamp: any; // Changed to 'any' to handle Firestore Timestamp
+  timestamp: Date;
 }
 
 export default function Admin() {
@@ -34,14 +34,7 @@ export default function Admin() {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const songRequests: SongRequest[] = []
       querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        songRequests.push({
-          id: doc.id,
-          songTitle: data.songTitle,
-          artist: data.artist,
-          message: data.message,
-          timestamp: data.timestamp
-        } as SongRequest)
+        songRequests.push({ id: doc.id, ...doc.data() } as SongRequest)
       })
       setRequests(songRequests)
     })
@@ -73,7 +66,7 @@ export default function Admin() {
                   </div>
                   <div className="ml-4 flex-shrink-0">
                     <p className="text-sm text-gray-500">
-                      {request.timestamp.toDate().toLocaleString()}
+                      {request.timestamp.toLocaleString()}
                     </p>
                   </div>
                 </div>
