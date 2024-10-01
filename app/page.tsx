@@ -57,7 +57,7 @@ export default function Home() {
       <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
         <div className="p-6">
           <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Request a Song</h2>
-          <p className="text-center text-sm text-gray-600 mb-8">If it fits the vibe, I'll play it!</p>
+          <p className="text-center text-sm text-gray-600 mb-8">If it fits the vibe, I will play it!</p>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="songTitle" className="text-sm font-medium text-gray-700">
