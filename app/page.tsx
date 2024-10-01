@@ -1,8 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Instagram } from 'lucide-react'
 import { initializeApp } from "firebase/app"
 import { getFirestore, collection, addDoc } from "firebase/firestore"
 
@@ -24,6 +28,7 @@ export default function Home() {
   const [songTitle, setSongTitle] = useState('')
   const [artist, setArtist] = useState('')
   const [message, setMessage] = useState('')
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,14 +40,15 @@ export default function Home() {
         message,
         timestamp: new Date()
       })
-      toast.success('Song request submitted successfully!')
       // Reset form
       setSongTitle('')
       setArtist('')
       setMessage('')
+      // Open the dialog
+      setIsDialogOpen(true)
     } catch (error) {
       console.error("Error adding document: ", error)
-      toast.error('Failed to submit song request. Please try again.')
+      alert('Failed to submit song request. Please try again.')
     }
   }
 
@@ -51,13 +57,13 @@ export default function Home() {
       <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
         <div className="p-6">
           <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Request a Song</h2>
-          <p className="text-center text-sm text-gray-600 mb-8">If it fits the vibe, I will play it!</p>
+          <p className="text-center text-sm text-gray-600 mb-8">If it fits the vibe, I'll play it!</p>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="songTitle" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="songTitle" className="text-sm font-medium text-gray-700">
                 Song Title
-              </label>
-              <input
+              </Label>
+              <Input
                 id="songTitle"
                 placeholder="Enter song title"
                 value={songTitle}
@@ -67,10 +73,10 @@ export default function Home() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="artist" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="artist" className="text-sm font-medium text-gray-700">
                 Artist
-              </label>
-              <input
+              </Label>
+              <Input
                 id="artist"
                 placeholder="Enter artist name"
                 value={artist}
@@ -80,10 +86,10 @@ export default function Home() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="message" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="message" className="text-sm font-medium text-gray-700">
                 Message (Optional)
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 id="message"
                 placeholder="Any special message for the DJ?"
                 value={message}
@@ -91,16 +97,36 @@ export default function Home() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             </div>
-            <button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold py-2 px-4 rounded-md hover:from-purple-600 hover:to-blue-600 transition duration-300"
-            >
+            <Button type="submit" className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold py-2 px-4 rounded-md hover:from-purple-600 hover:to-blue-600 transition duration-300">
               Submit Request
-            </button>
+            </Button>
           </form>
         </div>
       </div>
-      <ToastContainer position="bottom-center" />
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-center">Thanks for Your Request!</DialogTitle>
+            <DialogDescription className="text-center">
+              If you like the party, you can support us by following on Instagram!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center py-4">
+            <a
+              href="https://www.instagram.com/pulsar.events_/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-full hover:from-purple-700 hover:to-pink-700 transition duration-300"
+            >
+              <Instagram className="w-5 h-5 mr-2" />
+              Follow on Instagram
+            </a>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
