@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { initializeApp } from "firebase/app"
-import { getFirestore, collection, query, orderBy, onSnapshot } from "firebase/firestore"
+import { getFirestore, collection, query, orderBy, onSnapshot, Timestamp, doc, updateDoc } from "firebase/firestore"
 
 // Firebase configuration
 const firebaseConfig = {
@@ -23,7 +23,8 @@ interface SongRequest {
   songTitle: string;
   artist: string;
   message: string;
-  timestamp: Date;
+  timestamp: Timestamp;
+  played: boolean;  // Add this field
 }
 
 export default function Admin() {
@@ -34,13 +35,24 @@ export default function Admin() {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const songRequests: SongRequest[] = []
       querySnapshot.forEach((doc) => {
-        songRequests.push({ id: doc.id, ...doc.data() } as SongRequest)
+        const data = doc.data();
+        songRequests.push({
+          id: doc.id,
+          ...data,
+          timestamp: data.timestamp as Timestamp,
+          played: data.played || false  // Add this field, default to false if not present
+        } as SongRequest)
       })
       setRequests(songRequests)
     })
 
     return () => unsubscribe()
   }, [])
+
+  const togglePlayed = async (id: string, played: boolean) => {
+    const docRef = doc(db, "songRequests", id);
+    await updateDoc(docRef, { played: !played });
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -52,9 +64,11 @@ export default function Admin() {
               <li key={request.id} className="px-6 py-4 hover:bg-gray-50">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-indigo-600 truncate">
-                      {request.songTitle}
-                    </p>
+                    <div className="flex items-center">
+                      <p className="text-sm font-medium text-indigo-600 truncate">
+                        {request.songTitle}
+                      </p>
+                    </div>
                     <p className="text-sm text-gray-500">
                       {request.artist}
                     </p>
@@ -64,10 +78,19 @@ export default function Admin() {
                       </p>
                     )}
                   </div>
-                  <div className="ml-4 flex-shrink-0">
+                  <div className="ml-4 flex-shrink-0 flex flex-col items-end">
                     <p className="text-sm text-gray-500">
-                      {request.timestamp.toLocaleString()}
+                      {request.timestamp.toDate().toLocaleString()}
                     </p>
+                    <div className="mt-2 flex items-center">
+                      <span className="mr-2 text-sm text-gray-500">Played?</span>
+                      <input
+                        type="checkbox"
+                        checked={request.played}
+                        onChange={() => togglePlayed(request.id, request.played)}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                    </div>
                   </div>
                 </div>
               </li>
