@@ -24,7 +24,8 @@ interface SongRequest {
   artist: string;
   message: string;
   timestamp: Timestamp;
-  played: boolean;  // Add this field
+  played: boolean;
+  playedTimestamp?: Timestamp;
 }
 
 export default function Admin() {
@@ -40,7 +41,8 @@ export default function Admin() {
           id: doc.id,
           ...data,
           timestamp: data.timestamp as Timestamp,
-          played: data.played || false  // Add this field, default to false if not present
+          played: data.played || false,
+          playedTimestamp: data.playedTimestamp as Timestamp | undefined
         } as SongRequest)
       })
       setRequests(songRequests)
@@ -51,8 +53,31 @@ export default function Admin() {
 
   const togglePlayed = async (id: string, played: boolean) => {
     const docRef = doc(db, "songRequests", id);
-    await updateDoc(docRef, { played: !played });
+    const newPlayedStatus = !played;
+    const updateData: { played: boolean; playedTimestamp?: Timestamp | null } = {
+      played: newPlayedStatus,
+    };
+    if (newPlayedStatus) {
+      updateData.playedTimestamp = Timestamp.now();
+    } else {
+      updateData.playedTimestamp = null;
+    }
+    await updateDoc(docRef, updateData);
   }
+
+  const sortedRequests = [...requests].sort((a, b) => {
+    if (a.played === b.played) {
+      if (a.played) {
+        // If both are played, sort by playedTimestamp (most recent first)
+        return (b.playedTimestamp?.toMillis() || 0) - (a.playedTimestamp?.toMillis() || 0);
+      } else {
+        // If both are not played, sort by original timestamp (most recent first)
+        return b.timestamp.toMillis() - a.timestamp.toMillis();
+      }
+    }
+    // Not played requests come before played requests
+    return a.played ? 1 : -1;
+  });
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -60,8 +85,8 @@ export default function Admin() {
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Song Requests</h1>
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
-            {requests.map((request) => (
-              <li key={request.id} className="px-6 py-4 hover:bg-gray-50">
+            {sortedRequests.map((request) => (
+              <li key={request.id} className={`px-6 py-4 hover:bg-gray-50 ${request.played ? 'bg-gray-100' : ''}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center">
@@ -91,6 +116,11 @@ export default function Admin() {
                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                       />
                     </div>
+                    {request.played && request.playedTimestamp && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Played: {request.playedTimestamp.toDate().toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 </div>
               </li>
