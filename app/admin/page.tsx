@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { initializeApp } from "firebase/app"
-import { getFirestore, collection, query, orderBy, onSnapshot, Timestamp, doc, updateDoc } from "firebase/firestore"
+import { getFirestore, collection, query, orderBy, onSnapshot, Timestamp, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore"
 
 // Firebase configuration
 const firebaseConfig = {
@@ -65,6 +65,26 @@ export default function Admin() {
     await updateDoc(docRef, updateData);
   }
 
+  const deleteRequest = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this request?")) {
+      const docRef = doc(db, "songRequests", id);
+      await deleteDoc(docRef);
+    }
+  }
+
+  const deleteAllPlayed = async () => {
+    if (window.confirm("Are you sure you want to delete all played songs?")) {
+      const batch = writeBatch(db);
+      requests.forEach((request) => {
+        if (request.played) {
+          const docRef = doc(db, "songRequests", request.id);
+          batch.delete(docRef);
+        }
+      });
+      await batch.commit();
+    }
+  }
+
   const sortedRequests = [...requests].sort((a, b) => {
     if (a.played === b.played) {
       if (a.played) {
@@ -82,7 +102,15 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Song Requests</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4 sm:mb-0">Song Requests</h1>
+          <button
+            onClick={deleteAllPlayed}
+            className="px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base bg-red-500 text-white font-semibold rounded hover:bg-red-600 transition duration-300"
+          >
+            Delete All Played
+          </button>
+        </div>
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
             {sortedRequests.map((request) => (
@@ -121,6 +149,12 @@ export default function Admin() {
                         Played: {request.playedTimestamp.toDate().toLocaleString()}
                       </p>
                     )}
+                    <button
+                      onClick={() => deleteRequest(request.id)}
+                      className="mt-2 px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded hover:bg-red-600 transition duration-300"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               </li>

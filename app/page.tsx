@@ -108,7 +108,7 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle className="text-center">Thanks for Your Request!</DialogTitle>
             <DialogDescription className="text-center">
-              If you like the party, you can support us by following on Instagram!
+              Follow us on Instagram to stay updated on our upcoming parties!
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-4">
